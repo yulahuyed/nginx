@@ -1,4 +1,4 @@
-FROM alpine:3.5
+FROM alpine:3.6
 
 MAINTAINER suport.gencat@gencat.cat
 #Aquesta imatge es basa en la imatge oficial de NGINX https://hub.docker.com/_/nginx/ tag 1.13.0-alpine
