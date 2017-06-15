@@ -15,3 +15,5 @@ chgrp -R 0 /var
 chmod -R g+rw /var
 find /var -type d -exec chmod g+x {} +
 
+chmod -R g+rw /run
+chmod -R g+rw /etc/nginx/conf.d/

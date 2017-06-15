@@ -154,6 +154,9 @@ COPY html /usr/share/nginx/html
 COPY docker-setup.sh /
 RUN chmod 0755 /docker-setup.sh
 RUN /docker-setup.sh
+
+RUN mkdir -p /etc/nginx/conf
+RUN chmod -R 777 /etc/nginx/conf
 	
 VOLUME /data
 
