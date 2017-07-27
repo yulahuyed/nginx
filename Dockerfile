@@ -1,9 +1,9 @@
-FROM alpine:3.6
+FROM alpine:3.5
 
 MAINTAINER suport.gencat@gencat.cat
-#Aquesta imatge es basa en la imatge oficial de NGINX https://hub.docker.com/_/nginx/ tag 1.13.0-alpine
+#Aquesta imatge es basa en la imatge oficial de NGINX https://hub.docker.com/_/nginx/ tag 1.12.1-alpine
 
-ENV NGINX_VERSION 1.13.0
+ENV NGINX_VERSION 1.12.1
 
 ENV SERVER_NAME Gencat server
 
@@ -54,7 +54,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		--with-http_v2_module \
 	" \
 	&& addgroup -g 1666 -S nginx \
-	&& adduser -D -S -u 1666 -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
+	&& adduser -D -S -u 1666 -h /var/cache/nginx -s /sbin/nologin -G nginx -G root nginx \
 	&& apk update \
 	&& apk add --no-cache --virtual .build-deps \
 		gcc \
