@@ -1,19 +1,9 @@
 #!/bin/sh
+# Fix permissions on the given directory to allow group read/write of 
+# regular files and execute of directories.
+export USER_ID=$(id -u)
 
-# setup directory for data
-mkdir -p /data
-chown -R nginx:0 /data
-chmod g+w -R /data
-chown -R nginx:0 /usr
-chown -R nginx:0 /var
-
-chgrp -R 0 /usr
-chmod -R g+rw /usr
-find /usr -type d -exec chmod g+x {} +
-
-chgrp -R 0 /var
-chmod -R g+rw /var
-find /var -type d -exec chmod g+x {} +
-
-chmod -R g+rw /run
-chmod -R g+rw /etc/nginx/conf.d/
+find "$1" -exec chown $USER_ID {} \;
+find "$1" -exec chgrp 0 {} \;
+find "$1" -exec chmod g+rw {} \;
+find "$1" -type d -exec chmod g+x {} +

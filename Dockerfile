@@ -1,9 +1,9 @@
-FROM alpine:3.5
+FROM alpine:3.6
 
 MAINTAINER suport.gencat@gencat.cat
-#Aquesta imatge es basa en la imatge oficial de NGINX https://hub.docker.com/_/nginx/ tag 1.12.1-alpine
+#Aquesta imatge es basa en la imatge oficial de NGINX https://hub.docker.com/_/nginx/ tag 1.12.2-alpine
 
-ENV NGINX_VERSION 1.12.1
+ENV NGINX_VERSION 1.12.2
 
 ENV SERVER_NAME Gencat server
 
@@ -129,16 +129,14 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& mv /usr/bin/envsubst /tmp/ \
 	\
 	&& runDeps="$( \
-		scanelf --needed --nobanner /usr/sbin/nginx /usr/lib/nginx/modules/*.so /tmp/envsubst \
-			| awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
+		scanelf --needed --nobanner --format '%n#p' /usr/sbin/nginx /usr/lib/nginx/modules/*.so /tmp/envsubst \
+			| tr ',' '\n' \
 			| sort -u \
-			| xargs -r apk info --installed \
-			| sort -u \
+			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
 	)" \
 	&& apk add --no-cache --virtual .nginx-rundeps $runDeps \
 	&& apk del .build-deps \
 	&& apk del .gettext \
-	&& apk add --no-cache bash \	
 	&& mv /tmp/envsubst /usr/local/bin/ \
 	\
 	# forward request and error logs to docker log collector
@@ -153,25 +151,20 @@ COPY html /usr/share/nginx/html
 
 COPY docker-setup.sh /
 RUN chmod 0755 /docker-setup.sh
-RUN /docker-setup.sh
 
 RUN mkdir -p /etc/nginx/conf
-RUN chmod -R 777 /etc/nginx/conf
+
+RUN /docker-setup.sh /usr/share/nginx/html \
+    && /docker-setup.sh /etc/nginx/conf \
+    && /docker-setup.sh /etc/nginx/conf.d \
+	&& /docker-setup.sh /var/cache/nginx \
+	&& /docker-setup.sh /var/run
 	
-VOLUME /data
-
-#Fitxer d'entrada
-COPY run.sh /entrypoint.sh
-RUN chmod 0755 /entrypoint.sh
-
-#Copiem el fitxer wait-for-it
-COPY wait-for-it.sh /
-RUN chmod 0755 /wait-for-it.sh
+COPY run.sh /run.sh
+RUN chmod 0755 /run.sh
 
 EXPOSE 1080
 
-STOPSIGNAL SIGQUIT
+STOPSIGNAL SIGTERM
 
-USER 1666
-
-CMD ["/entrypoint.sh"]
+CMD ["/run.sh"]
