@@ -1,9 +1,9 @@
 FROM alpine:3.6
 
 MAINTAINER suport.gencat@gencat.cat
-#Aquesta imatge es basa en la imatge oficial de NGINX https://hub.docker.com/_/nginx/ tag 1.10.3-alpine
+#Aquesta imatge es basa en la imatge oficial de NGINX https://hub.docker.com/_/nginx/ tag 1.12.2-alpine
 
-ENV NGINX_VERSION 1.10.3
+ENV NGINX_VERSION 1.12.2
 
 ENV SERVER_NAME Gencat server
 
@@ -40,16 +40,18 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		--with-http_xslt_module=dynamic \
 		--with-http_image_filter_module=dynamic \
 		--with-http_geoip_module=dynamic \
-		--with-http_perl_module=dynamic \
 		--with-threads \
 		--with-stream \
 		--with-stream_ssl_module \
+		--with-stream_ssl_preread_module \
+		--with-stream_realip_module \
+		--with-stream_geoip_module=dynamic \
 		--with-http_slice_module \
 		--with-mail \
 		--with-mail_ssl_module \
+		--with-compat \
 		--with-file-aio \
 		--with-http_v2_module \
-		--with-ipv6 \
 	" \
 	&& addgroup -g 1666 -S nginx \
 	&& adduser -D -S -u 1666 -h /var/cache/nginx -s /sbin/nologin -G nginx -G root nginx \
@@ -66,13 +68,22 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		gnupg \
 		libxslt-dev \
 		gd-dev \
-		geoip-dev \
-		perl-dev \
+		geoip-dev \	
 	&& curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
 	&& curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
 	&& export GNUPGHOME="$(mktemp -d)" \
-	&& gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$GPG_KEYS" \
-	&& gpg --batch --verify nginx.tar.gz.asc nginx.tar.gz \
+	&& found=''; \
+	for server in \
+		ha.pool.sks-keyservers.net \
+		hkp://keyserver.ubuntu.com:80 \
+		hkp://p80.pool.sks-keyservers.net:80 \
+		pgp.mit.edu \
+	; do \
+		echo "Fetching GPG key $GPG_KEYS from $server"; \
+		gpg --keyserver "$server" --keyserver-options timeout=10 --recv-keys "$GPG_KEYS" && found=yes && break; \
+	done; \
+	test -z "$found" && echo >&2 "error: failed to fetch GPG key $GPG_KEYS" && exit 1; \
+	gpg --batch --verify nginx.tar.gz.asc nginx.tar.gz \
 	&& rm -r "$GNUPGHOME" nginx.tar.gz.asc \
 	&& mkdir -p /usr/src \
 	&& tar -zxC /usr/src -f nginx.tar.gz \
@@ -91,7 +102,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& mv objs/ngx_http_xslt_filter_module.so objs/ngx_http_xslt_filter_module-debug.so \
 	&& mv objs/ngx_http_image_filter_module.so objs/ngx_http_image_filter_module-debug.so \
 	&& mv objs/ngx_http_geoip_module.so objs/ngx_http_geoip_module-debug.so \
-	&& mv objs/ngx_http_perl_module.so objs/ngx_http_perl_module-debug.so \
+	&& mv objs/ngx_stream_geoip_module.so objs/ngx_stream_geoip_module-debug.so \
 	&& ./configure $CONFIG \
 	&& make -j$(getconf _NPROCESSORS_ONLN) \
 	&& make install \
@@ -104,7 +115,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& install -m755 objs/ngx_http_xslt_filter_module-debug.so /usr/lib/nginx/modules/ngx_http_xslt_filter_module-debug.so \
 	&& install -m755 objs/ngx_http_image_filter_module-debug.so /usr/lib/nginx/modules/ngx_http_image_filter_module-debug.so \
 	&& install -m755 objs/ngx_http_geoip_module-debug.so /usr/lib/nginx/modules/ngx_http_geoip_module-debug.so \
-	&& install -m755 objs/ngx_http_perl_module-debug.so /usr/lib/nginx/modules/ngx_http_perl_module-debug.so \
+	&& install -m755 objs/ngx_stream_geoip_module-debug.so /usr/lib/nginx/modules/ngx_stream_geoip_module-debug.so \
 	&& ln -s ../../usr/lib/nginx/modules /etc/nginx/modules \
 	&& strip /usr/sbin/nginx* \
 	&& strip /usr/lib/nginx/modules/*.so \
@@ -118,11 +129,10 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& mv /usr/bin/envsubst /tmp/ \
 	\
 	&& runDeps="$( \
-		scanelf --needed --nobanner /usr/sbin/nginx /usr/lib/nginx/modules/*.so /tmp/envsubst \
-			| awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
+		scanelf --needed --nobanner --format '%n#p' /usr/sbin/nginx /usr/lib/nginx/modules/*.so /tmp/envsubst \
+			| tr ',' '\n' \
 			| sort -u \
-			| xargs -r apk info --installed \
-			| sort -u \
+			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
 	)" \
 	&& apk add --no-cache --virtual .nginx-rundeps $runDeps \
 	&& apk del .build-deps \
