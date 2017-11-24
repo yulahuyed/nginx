@@ -1,4 +1,4 @@
-# nginx 2.12.2 Docker image
+# nginx Docker image
 
 Compatible with:
 * docker
