@@ -173,8 +173,6 @@ RUN /docker-setup.sh /usr/share/nginx/html \
 COPY run.sh /run.sh
 RUN chmod 0755 /run.sh
 
-EXPOSE 1080
-
 STOPSIGNAL SIGTERM
 
 CMD ["/run.sh"]
