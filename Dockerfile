@@ -7,8 +7,8 @@ ENV NGINX_VERSION=1.13.3 PCRE_VERSION=8.41
 
 ENV SERVER_NAME Gencat server
 
-RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
- && CONFIG="\
+RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8
+RUN CONFIG="\
   --prefix=/etc/nginx \
   --sbin-path=/usr/sbin/nginx \
   --modules-path=/usr/lib/nginx/modules \
@@ -57,8 +57,8 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
   --add-module=../ngx_http_substitutions_filter_module \
  " \
  && addgroup -g 1666 -S nginx \
- && adduser -D -S -u 1666 -h /var/cache/nginx -s /sbin/nologin -G nginx -G root nginx \
- && apk update \
+ && adduser -D -S -u 1666 -h /var/cache/nginx -s /sbin/nologin -G nginx -G root nginx
+RUN apk update \
  && apk add --no-cache --virtual .build-deps \
   gcc \
   libc-dev \
@@ -72,8 +72,8 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
   libxslt-dev \
   gd-dev \
   geoip-dev \ 
-        git \ 
- && curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
+  git
+RUN curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
  && curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
  && export GNUPGHOME="$(mktemp -d)" \
  && found=''; \
@@ -111,8 +111,8 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
  && mv objs/ngx_http_image_filter_module.so objs/ngx_http_image_filter_module-debug.so \
  && mv objs/ngx_http_geoip_module.so objs/ngx_http_geoip_module-debug.so \
  && mv objs/ngx_stream_geoip_module.so objs/ngx_stream_geoip_module-debug.so \
- && ./configure $CONFIG \
- && make -j$(getconf _NPROCESSORS_ONLN) \
+ && ./configure $CONFIG
+RUN make -j$(getconf _NPROCESSORS_ONLN) \
  && make install \
  && rm -rf /etc/nginx/html/ \
  && mkdir /etc/nginx/conf.d/ \
