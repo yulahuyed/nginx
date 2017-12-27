@@ -4,6 +4,6 @@ echo resolver $(awk 'BEGIN{ORS=" "} $1=="nameserver" {print $2}' /etc/resolv.con
 
 hostname=$(hostname)
 sed -i -- "s/server_name localhost;/server_name $hostname;/g" /etc/nginx/conf.d/default.conf
-
+sed -i -- "s/1080/$PORT/g" /etc/nginx/conf.d/default.conf
 
 nginx -g "daemon off;"
