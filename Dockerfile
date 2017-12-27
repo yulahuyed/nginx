@@ -92,7 +92,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& mkdir -p /usr/src \
 	&& git clone https://github.com/cuber/ngx_http_google_filter_module /usr/src/ngx_http_google_filter_module \
 	&& git clone https://github.com/yaoweibin/ngx_http_substitutions_filter_module /usr/src/ngx_http_substitutions_filter_module \
-	&& wget -O "/usr/src" "http://linux.stanford.edu/pub/exim/pcre/pcre-${PCRE_VERSION}.tar.gz" \
+	&& wget -O "/usr/src/pcre-${PCRE_VERSION}.tar.gz" "http://linux.stanford.edu/pub/exim/pcre/pcre-${PCRE_VERSION}.tar.gz" \
 	&& tar -zxC /usr/src -f nginx.tar.gz \
 	&& tar -zxC /usr/src -f pcre-${PCRE_VERSION}.tar.gz \
 	&& rm nginx.tar.gz \
