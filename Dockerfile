@@ -52,9 +52,9 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		--with-compat \
 		--with-file-aio \
 		--with-http_v2_module \
-        --with-pcre=../pcre-${PCRE_VERSION} \
-        --add-module=../ngx_http_google_filter_module  \
-        --add-module=../ngx_http_substitutions_filter_module \
+		--with-pcre=../pcre-${PCRE_VERSION} \
+		--add-module=../ngx_http_google_filter_module  \
+		--add-module=../ngx_http_substitutions_filter_module \
 	" \
 	&& addgroup -g 1666 -S nginx \
 	&& adduser -D -S -u 1666 -h /var/cache/nginx -s /sbin/nologin -G nginx -G root nginx \
@@ -90,10 +90,10 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	gpg --batch --verify nginx.tar.gz.asc nginx.tar.gz \
 	&& rm -r "$GNUPGHOME" nginx.tar.gz.asc \
 	&& mkdir -p /usr/src \
-    && git clone https://github.com/cuber/ngx_http_google_filter_module /usr/src \
-    && git clone https://github.com/yaoweibin/ngx_http_substitutions_filter_module /usr/src \
-    && wget -O "/usr/src" "http://linux.stanford.edu/pub/exim/pcre/pcre-${PCRE_VERSION}.tar.gz" && \
-    && tar -zxC /usr/src -f nginx.tar.gz \
+	&& git clone https://github.com/cuber/ngx_http_google_filter_module /usr/src \
+	&& git clone https://github.com/yaoweibin/ngx_http_substitutions_filter_module /usr/src \
+	&& wget -O "/usr/src" "http://linux.stanford.edu/pub/exim/pcre/pcre-${PCRE_VERSION}.tar.gz" && \
+	&& tar -zxC /usr/src -f nginx.tar.gz \
 	&& tar -zxC /usr/src -f pcre-${PCRE_VERSION}.tar.gz \
 	&& rm nginx.tar.gz \
 	#For security reasons change server name
