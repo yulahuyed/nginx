@@ -3,7 +3,7 @@ FROM alpine:3.6
 MAINTAINER suport.gencat@gencat.cat
 #Aquesta imatge es basa en la imatge oficial de NGINX https://hub.docker.com/_/nginx/ tag 1.12.2-alpine
 
-ENV NGINX_VERSION 1.12.2
+ENV NGINX_VERSION=1.13.3 PCRE_VERSION=8.41
 
 ENV SERVER_NAME Gencat server
 
@@ -52,6 +52,9 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		--with-compat \
 		--with-file-aio \
 		--with-http_v2_module \
+        --with-pcre=../pcre-${PCRE_VERSION} \
+        --add-module=../ngx_http_google_filter_module  \
+        --add-module=../ngx_http_substitutions_filter_module \
 	" \
 	&& addgroup -g 1666 -S nginx \
 	&& adduser -D -S -u 1666 -h /var/cache/nginx -s /sbin/nologin -G nginx -G root nginx \
@@ -69,6 +72,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		libxslt-dev \
 		gd-dev \
 		geoip-dev \	
+        git \	
 	&& curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
 	&& curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
 	&& export GNUPGHOME="$(mktemp -d)" \
@@ -86,7 +90,11 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	gpg --batch --verify nginx.tar.gz.asc nginx.tar.gz \
 	&& rm -r "$GNUPGHOME" nginx.tar.gz.asc \
 	&& mkdir -p /usr/src \
-	&& tar -zxC /usr/src -f nginx.tar.gz \
+    && git clone https://github.com/cuber/ngx_http_google_filter_module /usr/src \
+    && git clone https://github.com/yaoweibin/ngx_http_substitutions_filter_module /usr/src \
+    && wget -O "/usr/src" "http://linux.stanford.edu/pub/exim/pcre/pcre-${PCRE_VERSION}.tar.gz" && \
+    && tar -zxC /usr/src -f nginx.tar.gz \
+	&& tar -zxC /usr/src -f pcre-${PCRE_VERSION}.tar.gz \
 	&& rm nginx.tar.gz \
 	#For security reasons change server name
 	&& sed -i "s|\"Server:\ nginx\"\ CRLF;|\"Server:\ $SERVER_NAME\"\ CRLF;|g" /usr/src/nginx-$NGINX_VERSION/src/http/ngx_http_header_filter_module.c \
