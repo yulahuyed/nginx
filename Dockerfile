@@ -92,7 +92,7 @@ RUN curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar
  && mkdir -p /usr/src \
  && git clone https://github.com/cuber/ngx_http_google_filter_module /usr/src \
  && git clone https://github.com/yaoweibin/ngx_http_substitutions_filter_module /usr/src \
- && wget -O "/usr/src" "http://linux.stanford.edu/pub/exim/pcre/pcre-${PCRE_VERSION}.tar.gz" && \
+ && wget -O "/usr/src" "http://linux.stanford.edu/pub/exim/pcre/pcre-${PCRE_VERSION}.tar.gz" \
  && tar -zxC /usr/src -f nginx.tar.gz \
  && tar -zxC /usr/src -f pcre-${PCRE_VERSION}.tar.gz \
  && rm nginx.tar.gz \
