@@ -6,3 +6,4 @@ Compatible with:
 * Openshift
 
 This is the official Nginx Docker Image based on Alpine OS for Gencat applications
+
